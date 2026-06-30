@@ -3,7 +3,9 @@ use macroquad::input;
 
 
 mod input_utils;
+mod textbox;
 use input_utils::input_utils::resolve_key;
+use textbox::textbox::TextBox;
 
 #[macroquad::main("Type")]
 async fn main() {
@@ -29,6 +31,9 @@ async fn main() {
         // draw_line(40.0, 40.0, 100.0, 150.0, 60.3, BLUE);
         draw_text(&text, width / 2.0, height / 2.0, 48.0, WHITE);
         next_frame().await;
+
+        #[warn(unused)]
+        let t = TextBox::new(400, 48);
     }
 }
 
