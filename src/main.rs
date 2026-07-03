@@ -1,6 +1,5 @@
-use macroquad::prelude::*;
 use macroquad::input;
-
+use macroquad::prelude::*;
 
 mod input_utils;
 mod textbox;
@@ -12,15 +11,26 @@ async fn main() {
     request_new_screen_size(1920.0, 1080.0);
     let mut height;
     let mut width;
-    request_new_screen_size(1920.0, 1080.0);
 
     // read text
-    let text = include_str!("texts/first.txt");
+    let text: String = include_str!("texts/first.txt").to_string();
+    let curr_index: usize = 0;
+    let mut current_letter: &str;
 
     loop {
+        // get current pos
+        // current_letter_byte = &text[curr_index as usize];
+        current_letter = &text[curr_index..curr_index + 1];
+        // deref the byte, cast to char, and borrothw the reference
+
         // get input
         if let Some(key) = input::get_last_key_pressed() {
-            println!("{} was pressed", resolve_key(&key));
+            println!(
+                "{} was pressed, which is correct: {}, the correct is: {}",
+                resolve_key(current_letter, &key).unwrap().1,
+                resolve_key(current_letter, &key).unwrap().0,
+                current_letter
+            );
         }
 
         height = screen_height();
@@ -33,8 +43,6 @@ async fn main() {
         next_frame().await;
 
         #[warn(unused)]
-        let t = TextBox::new(400, 48);
+        let _t = TextBox::new(400, 48);
     }
 }
-
-

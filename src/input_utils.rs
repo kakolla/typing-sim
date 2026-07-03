@@ -1,13 +1,12 @@
-
-
-
-
 pub mod input_utils {
-    
-use macroquad::input::KeyCode;
 
-    pub fn resolve_key(key: &KeyCode) -> &str {
-        let s: &str = match key {
+    use macroquad::input::KeyCode;
+
+    pub fn resolve_key<'a>(
+        correct_key: &'a str,
+        key: &KeyCode,
+    ) -> Result<(bool, &'static str), String> {
+        let k: &str = match key {
             KeyCode::A => "A",
             KeyCode::B => "B",
             KeyCode::C => "C",
@@ -35,11 +34,12 @@ use macroquad::input::KeyCode;
             KeyCode::Y => "Y",
             KeyCode::Z => "Z",
             KeyCode::Space => " ",
-            _ => ""
-            };
-        s
-
+            _ => "",
+        };
+        if k == correct_key {
+            return Ok((true, k));
+        } else {
+            return Ok((false, k));
+        }
     }
-
-
 }
