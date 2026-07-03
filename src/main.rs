@@ -14,7 +14,7 @@ async fn main() {
 
     // read text
     let text: String = include_str!("texts/first.txt").to_string();
-    let curr_index: usize = 0;
+    let mut curr_index: usize = 0;
     let mut current_letter: &str;
 
     loop {
@@ -25,11 +25,11 @@ async fn main() {
 
         // get input
         if let Some(key) = input::get_last_key_pressed() {
+            let res = resolve_key(current_letter, &key, &mut curr_index).unwrap();
+
             println!(
                 "{} was pressed, which is correct: {}, the correct is: {}",
-                resolve_key(current_letter, &key).unwrap().1,
-                resolve_key(current_letter, &key).unwrap().0,
-                current_letter
+                res.1, res.0, current_letter
             );
         }
 
