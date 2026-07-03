@@ -39,7 +39,8 @@ async fn main() {
         // println!("{} {} ", width, height);
 
         // draw_line(40.0, 40.0, 100.0, 150.0, 60.3, BLUE);
-        draw_text(&text, width / 2.0, height / 2.0, 48.0, WHITE);
+        // draw_text(&text, width / 2.0, height / 2.0, 48.0, WHITE);
+        draw_text(&text[curr_index..], width / 2.0, height / 2.0, 48.0, WHITE);
         next_frame().await;
 
         #[warn(unused)]
