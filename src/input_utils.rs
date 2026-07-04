@@ -36,7 +36,7 @@ pub mod input_utils {
             KeyCode::Y => "y",
             KeyCode::Z => "z",
             KeyCode::Space => " ",
-            _ => "",
+            _ => "non_letter",
         };
         if k == correct_key {
             *curr_index += 1;

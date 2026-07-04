@@ -6,6 +6,8 @@ mod textbox;
 use input_utils::input_utils::resolve_key;
 use textbox::textbox::TextBox;
 
+use std::time::{Duration, Instant};
+
 #[macroquad::main("Type")]
 async fn main() {
     request_new_screen_size(1920.0, 1080.0);
@@ -18,13 +20,17 @@ async fn main() {
     let mut current_letter: &str;
 
     let text2: String = include_str!("texts/second.txt").to_string();
-    let texts: [String; 2] = [text1, text2];
+    let texts: [String; 2] = [text2, text1];
 
     let mut i: usize = 0;
     let mut text: &String;
 
+    // wpm related stuff
     let mut started: bool = false; // don't start the game until typing starts
+    let mut chars: usize = 0;
 
+    let mut now = Instant::now();
+    let mut time_elapsed = 0.0;
     loop {
         // revolve between texts
         text = &texts[i % 2];
@@ -36,8 +42,17 @@ async fn main() {
 
         // get input
         if let Some(key) = input::get_last_key_pressed() {
-            started = true; // start typing
             let _res = resolve_key(current_letter, &key, &mut curr_index).unwrap();
+            // only accept valid letters to start the game
+            if _res.1 != "non_letter" {
+                if started == false {
+                    // start typing
+                    started = true;
+                    now = Instant::now();
+                    chars = 0;
+                }
+                chars += 1;
+            }
 
             // println!(
             //     "{} was pressed, which is correct: {}, the correct is: {}",
@@ -55,7 +70,11 @@ async fn main() {
         draw_text(&text[curr_index..], width / 2.0, height / 2.0, 48.0, WHITE);
 
         // wpm counter
-        let wpm_text = format!("{} WPM", get_wpm(48, 3.0));
+        if started == true {
+            time_elapsed = now.elapsed().as_secs_f32();
+        }
+
+        let wpm_text = format!("{} WPM", get_wpm(chars, time_elapsed));
         draw_text(wpm_text, width / 2.0, height / 3.0, 48.0, WHITE);
         next_frame().await;
 
@@ -79,6 +98,6 @@ fn check_win(text: &String, curr_index: usize) -> bool {
     }
 }
 
-fn get_wpm(chars_typed: i32, time_elapsed: f32) -> i32 {
+fn get_wpm(chars_typed: usize, time_elapsed: f32) -> i32 {
     return ((chars_typed as f32 / 5.0) * (60.0 / time_elapsed)) as i32;
 }
