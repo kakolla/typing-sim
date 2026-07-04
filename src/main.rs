@@ -34,11 +34,11 @@ async fn main() {
 
         // get input
         if let Some(key) = input::get_last_key_pressed() {
-            let res = resolve_key(current_letter, &key, &mut curr_index).unwrap();
+            let _res = resolve_key(current_letter, &key, &mut curr_index).unwrap();
 
             // println!(
             //     "{} was pressed, which is correct: {}, the correct is: {}",
-            //     res.1, res.0, current_letter
+            //     _res.1, _res.0, current_letter
             // );
         }
 
