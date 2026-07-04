@@ -6,13 +6,15 @@ mod textbox;
 use input_utils::input_utils::resolve_key;
 use textbox::textbox::TextBox;
 
+use std::sync::{Arc, Mutex};
+use std::thread;
 use std::time::{Duration, Instant};
 
 #[macroquad::main("Type")]
 async fn main() {
     request_new_screen_size(1920.0, 1080.0);
-    let mut height;
-    let mut width;
+    let mut height = 1080.0;
+    let mut width = 1920.0;
 
     // read text
     let text1: String = include_str!("texts/first.txt").to_string();
@@ -27,10 +29,19 @@ async fn main() {
 
     // wpm related stuff
     let mut started: bool = false; // don't start the game until typing starts
-    let mut chars: usize = 0;
+    let chars = Arc::new(Mutex::new(0 as usize));
+    let chars_clone = Arc::clone(&chars);
+    let wpm_text = Arc::new(Mutex::new("".to_string()));
+    let wpm_text_clone = Arc::clone(&wpm_text);
 
     let mut now = Instant::now();
-    let mut time_elapsed = 0.0;
+    // let mut time_elapsed = 0.0;
+    let time_elapsed = Arc::new(Mutex::new(0.0 as f32));
+    let time_elapsed_clone = Arc::clone(&time_elapsed);
+
+    // start wpm thread
+    // move ownership of the clone into the thread with this closure
+    thread::spawn(move || update_wpm(chars_clone, time_elapsed_clone, wpm_text_clone));
     loop {
         // revolve between texts
         text = &texts[i % 2];
@@ -49,9 +60,13 @@ async fn main() {
                     // start typing
                     started = true;
                     now = Instant::now();
-                    chars = 0;
+
+                    // set chars (shared var) to 0
+                    let mut val = chars.lock().unwrap();
+                    *val = 0;
                 }
-                chars += 1;
+                let mut val = chars.lock().unwrap();
+                *val += 1;
             }
 
             // println!(
@@ -71,11 +86,21 @@ async fn main() {
 
         // wpm counter
         if started == true {
-            time_elapsed = now.elapsed().as_secs_f32();
+            let mut new_time_elapsed = time_elapsed.lock().unwrap();
+            *new_time_elapsed = now.elapsed().as_secs_f32();
         }
 
-        let wpm_text = format!("{} WPM", get_wpm(chars, time_elapsed));
-        draw_text(wpm_text, width / 2.0, height / 3.0, 48.0, WHITE);
+        // let wpm_text = format!("{} WPM", get_wpm(chars, time_elapsed));
+        {
+            let wpm_text_read = wpm_text.lock().unwrap();
+            draw_text(
+                wpm_text_read.as_str(),
+                width / 2.0,
+                height / 3.0,
+                48.0,
+                WHITE,
+            );
+        }
         next_frame().await;
 
         #[warn(unused)]
@@ -100,4 +125,24 @@ fn check_win(text: &String, curr_index: usize) -> bool {
 
 fn get_wpm(chars_typed: usize, time_elapsed: f32) -> i32 {
     return ((chars_typed as f32 / 5.0) * (60.0 / time_elapsed)) as i32;
+}
+
+/// only called by wpm thread
+fn update_wpm(
+    chars: Arc<Mutex<usize>>,
+    time_elapsed: Arc<Mutex<f32>>,
+    wpm_text_clone: Arc<Mutex<String>>,
+) {
+    loop {
+        thread::sleep(Duration::from_millis(1000));
+
+        // lock before writing
+        {
+            let chars_typed = chars.lock().unwrap();
+            let time_passed = time_elapsed.lock().unwrap();
+            // let wpm_text = format!("{} WPM", get_wpm(*chars_typed, *time_passed));
+            let mut wpm_text_val = wpm_text_clone.lock().unwrap();
+            *wpm_text_val = format!("{} WPM", get_wpm(*chars_typed, *time_passed));
+        }
+    }
 }
