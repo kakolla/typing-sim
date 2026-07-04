@@ -13,11 +13,20 @@ async fn main() {
     let mut width;
 
     // read text
-    let text: String = include_str!("texts/first.txt").to_string();
+    let text1: String = include_str!("texts/first.txt").to_string();
     let mut curr_index: usize = 0;
     let mut current_letter: &str;
 
+    let text2: String = include_str!("texts/second.txt").to_string();
+    let texts: [String; 2] = [text1, text2];
+
+    let mut i: usize = 0;
+    let mut text: &String;
+
     loop {
+        // revolve between texts
+        text = &texts[i % 2];
+
         // get current pos
         // current_letter_byte = &text[curr_index as usize];
         current_letter = &text[curr_index..curr_index + 1];
@@ -27,10 +36,10 @@ async fn main() {
         if let Some(key) = input::get_last_key_pressed() {
             let res = resolve_key(current_letter, &key, &mut curr_index).unwrap();
 
-            println!(
-                "{} was pressed, which is correct: {}, the correct is: {}",
-                res.1, res.0, current_letter
-            );
+            // println!(
+            //     "{} was pressed, which is correct: {}, the correct is: {}",
+            //     res.1, res.0, current_letter
+            // );
         }
 
         height = screen_height();
@@ -45,5 +54,19 @@ async fn main() {
 
         #[warn(unused)]
         let _t = TextBox::new(400, 48);
+        // check win
+        if check_win(&text, curr_index) {
+            i += 1;
+            curr_index = 0;
+        }
+    }
+}
+
+/// check if all letters are typed, return true
+fn check_win(text: &String, curr_index: usize) -> bool {
+    if text.len() == curr_index + 1 {
+        return true;
+    } else {
+        return false;
     }
 }
