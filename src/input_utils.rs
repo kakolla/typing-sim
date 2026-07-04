@@ -36,6 +36,7 @@ pub mod input_utils {
             KeyCode::Y => "y",
             KeyCode::Z => "z",
             KeyCode::Space => " ",
+            KeyCode::Escape => "Escape",
             _ => "non_letter",
         };
         if k == correct_key {

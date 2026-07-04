@@ -33,7 +33,7 @@ async fn main() {
     let mut started: bool = false; // don't start the game until typing starts
     let chars = Arc::new(Mutex::new(0 as usize));
     let chars_clone = Arc::clone(&chars);
-    let wpm_text = Arc::new(Mutex::new("".to_string()));
+    let wpm_text = Arc::new(Mutex::new("0 WPM".to_string()));
     let wpm_text_clone = Arc::clone(&wpm_text);
 
     let mut now = Instant::now();
@@ -63,8 +63,18 @@ async fn main() {
         // get input
         if let Some(key) = input::get_last_key_pressed() {
             let _res = resolve_key(current_letter, &key, &mut curr_index).unwrap();
+            if _res.1 == "Escape" {
+                // restart
+                wm.assort_words();
+                curr_index = 0;
+                started = false;
+                {
+                    let mut time_elapsed_val = time_elapsed.lock().unwrap();
+                    *time_elapsed_val = 0.0;
+                }
+            }
             // only accept valid letters to start the game
-            if _res.1 != "non_letter" {
+            else if _res.1 != "non_letter" {
                 if started == false {
                     // start typing
                     started = true;
@@ -74,8 +84,10 @@ async fn main() {
                     let mut val = chars.lock().unwrap();
                     *val = 0;
                 }
-                let mut val = chars.lock().unwrap();
-                *val += 1;
+                if _res.0 {
+                    let mut val = chars.lock().unwrap();
+                    *val += 1;
+                }
             }
 
             // println!(
@@ -103,7 +115,11 @@ async fn main() {
         {
             let wpm_text_read = wpm_text.lock().unwrap();
             draw_text(
-                wpm_text_read.as_str(),
+                if started {
+                    wpm_text_read.as_str()
+                } else {
+                    "0 WPM"
+                },
                 width / 2.0,
                 height / 3.0,
                 48.0,
@@ -150,6 +166,11 @@ fn update_wpm(
         {
             let chars_typed = chars.lock().unwrap();
             let time_passed = time_elapsed.lock().unwrap();
+            if *time_passed < 0.5 {
+                let mut wpm_text_val = wpm_text_clone.lock().unwrap();
+                *wpm_text_val = format!("{} WPM", 0);
+                continue;
+            }
             // let wpm_text = format!("{} WPM", get_wpm(*chars_typed, *time_passed));
             let mut wpm_text_val = wpm_text_clone.lock().unwrap();
             *wpm_text_val = format!("{} WPM", get_wpm(*chars_typed, *time_passed));

@@ -43,7 +43,6 @@ pub mod word_manager {
                 .iter()
                 .map(|s| s.to_string())
                 .collect();
-            println!("{:?}", self.words);
         }
 
         pub fn get_entire_word_text(&self) -> String {
