@@ -23,6 +23,8 @@ async fn main() {
     let mut i: usize = 0;
     let mut text: &String;
 
+    let mut started: bool = false; // don't start the game until typing starts
+
     loop {
         // revolve between texts
         text = &texts[i % 2];
@@ -34,6 +36,7 @@ async fn main() {
 
         // get input
         if let Some(key) = input::get_last_key_pressed() {
+            started = true; // start typing
             let _res = resolve_key(current_letter, &key, &mut curr_index).unwrap();
 
             // println!(
@@ -50,6 +53,10 @@ async fn main() {
         // draw_line(40.0, 40.0, 100.0, 150.0, 60.3, BLUE);
         // draw_text(&text, width / 2.0, height / 2.0, 48.0, WHITE);
         draw_text(&text[curr_index..], width / 2.0, height / 2.0, 48.0, WHITE);
+
+        // wpm counter
+        let wpm_text = format!("{} WPM", get_wpm(48, 3.0));
+        draw_text(wpm_text, width / 2.0, height / 3.0, 48.0, WHITE);
         next_frame().await;
 
         #[warn(unused)]
@@ -58,6 +65,7 @@ async fn main() {
         if check_win(&text, curr_index) {
             i += 1;
             curr_index = 0;
+            started = false;
         }
     }
 }
@@ -69,4 +77,8 @@ fn check_win(text: &String, curr_index: usize) -> bool {
     } else {
         return false;
     }
+}
+
+fn get_wpm(chars_typed: i32, time_elapsed: f32) -> i32 {
+    return ((chars_typed as f32 / 5.0) * (60.0 / time_elapsed)) as i32;
 }
