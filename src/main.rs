@@ -3,8 +3,10 @@ use macroquad::prelude::*;
 
 mod input_utils;
 mod textbox;
+mod word_manager;
 use input_utils::input_utils::resolve_key;
 use textbox::textbox::TextBox;
+use word_manager::word_manager::WordManager;
 
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -13,19 +15,19 @@ use std::time::{Duration, Instant};
 #[macroquad::main("Type")]
 async fn main() {
     request_new_screen_size(1920.0, 1080.0);
-    let mut height = 1080.0;
-    let mut width = 1920.0;
+    let mut height;
+    let mut width;
 
     // read text
-    let text1: String = include_str!("texts/first.txt").to_string();
+    // let text1: String = include_str!("texts/first.txt").to_string();
     let mut curr_index: usize = 0;
     let mut current_letter: &str;
 
-    let text2: String = include_str!("texts/second.txt").to_string();
-    let texts: [String; 2] = [text2, text1];
+    // let text2: String = include_str!("texts/second.txt").to_string();
+    // let texts: [String; 2] = [text2, text1];
 
-    let mut i: usize = 0;
-    let mut text: &String;
+    // let mut i: usize = 0;
+    // let mut text: &String;
 
     // wpm related stuff
     let mut started: bool = false; // don't start the game until typing starts
@@ -42,9 +44,16 @@ async fn main() {
     // start wpm thread
     // move ownership of the clone into the thread with this closure
     thread::spawn(move || update_wpm(chars_clone, time_elapsed_clone, wpm_text_clone));
+
+    // init the words
+    let mut wm = WordManager::new();
+    wm.init_words("src/texts/words.txt".to_string()).unwrap();
+    wm.assort_words();
+
     loop {
         // revolve between texts
-        text = &texts[i % 2];
+        // text = &texts[i % 2];
+        let text = &wm.get_entire_word_text();
 
         // get current pos
         // current_letter_byte = &text[curr_index as usize];
@@ -107,7 +116,8 @@ async fn main() {
         let _t = TextBox::new(400, 48);
         // check win
         if check_win(&text, curr_index) {
-            i += 1;
+            // i += 1;
+            wm.assort_words();
             curr_index = 0;
             started = false;
         }
